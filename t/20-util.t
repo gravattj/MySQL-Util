@@ -31,11 +31,32 @@ get_indexes();
 get_ak_constraint();
 get_fk_constraints();
 create_data();
+drop_fks_and_apply_ddl();
 
 ##################################
 
 END {
     drop_db();
+}
+
+sub drop_fks_and_apply_ddl {
+    my $func = ( caller(0) )[3];
+
+    my $aref = $Util->drop_fks;
+    ok( ref $aref eq 'ARRAY',
+        "$func - drop_fks, no args, returns an arrayref" );
+    ok( scalar @$aref == 5,
+        "$func - arrayref has correct number of elements" );
+
+    my $href = $Util->get_fk_constraints;
+    ok( ( scalar keys %$href ) == 0,
+        "$func - verify no constraints in the db" );
+
+    ok( $Util->apply_ddl($aref), "$func - apply_ddl" );
+
+    $href = $Util->get_fk_constraints;
+    ok( ( scalar keys %$href ) == 5,
+        "$func - verify constraints are back in the db" );
 }
 
 sub create_data {
@@ -45,45 +66,73 @@ sub create_data {
     ok( $@, "$func - called without args" );
 
     my $table = 'depth_0a';
-    my $rows = 20;
+    my $rows  = 20;
     ok( $Util->create_data( table => $table, rows => $rows ) == $rows,
         "$func - simple table and rows" );
-    ok(get_row_cnt($table) == $rows, "$func - verify row count");
-    
+    ok( get_row_cnt($table) == $rows, "$func - verify row count" );
+
     $table = 'depth_1a';
-    $rows = 30;
+    $rows  = 30;
     ok( $Util->create_data( table => $table, rows => $rows ) == $rows,
         "$func - simple table and rows" );
-    ok(get_row_cnt($table) == $rows, "$func - verify row count");
-    
+    ok( get_row_cnt($table) == $rows, "$func - verify row count" );
+
     $table = 'depth_2a';
-    $rows = 40;
+    $rows  = 40;
     eval { $Util->create_data( table => $table, rows => $rows ) };
-    ok($@, "$func - todo auto generate data for parent tables if empty");
-    
+    ok( $@, "$func - todo auto generate data for parent tables if empty" );
+
     $table = 'depth_0b';
-    $rows = 25;
+    $rows  = 25;
     ok( $Util->create_data( table => $table, rows => $rows ) == $rows,
         "$func - not so simple table and rows" );
-    ok(get_row_cnt($table) == $rows, "$func - verify row count");
-    
+    ok( get_row_cnt($table) == $rows, "$func - verify row count" );
+
     # try depth_2a again
     $table = 'depth_2a';
-    $rows = 40;
+    $rows  = 40;
     ok( $Util->create_data( table => $table, rows => $rows ) == $rows,
         "$func - complex table and rows" );
-    ok(get_row_cnt($table) == $rows, "$func - verify row count");
+    ok( get_row_cnt($table) == $rows, "$func - verify row count" );
+
+    $table = 'bogus';
+    $rows  = 10;
+    eval { $Util->create_data( table => $table, rows => $rows ); };
+    ok( $@, "$func - called with non-existent table" );
+
+    $table = 'depth_3a';
+    $rows  = 50;
+    ok( $Util->create_data( table => $table, rows => $rows ) == $rows,
+        "$func - complex table and rows" );
+    ok( get_row_cnt($table) == $rows, "$func - verify row count" );
+
+    my $dbh = $Util->clone_dbh;
+    my $sql = qq{
+        select *
+        from depth_0a
+        };
+    my $href = $dbh->selectrow_hashref($sql);
+    my $id   = $href->{ uc 'depth_0a_id' };
+
+    ok( $Util->create_data(
+            table    => $table,
+            rows     => 50,
+            defaults => { depth_0a_id => $id }
+        ),
+        "$func - create data with default hint"
+    );
+
 }
 
 sub get_row_cnt {
     my $table = shift;
-    
+
     state $dbh = $Util->clone_dbh;
-    
+
     my $sql = qq{
         select count(*) from $table
     };
-    
+
     return $dbh->selectrow_arrayref($sql)->[0];
 }
 
@@ -330,7 +379,7 @@ sub get_tables {
 
     my $tables;
     ok( $tables = $Util->get_tables, "$func - called without args " );
-    ok( scalar @$tables == 8, "$func - count " );
+    ok( scalar @$tables == 9, "$func - count " );
     ok( $tables = $Util->get_tables('garbage'), "$func - with args " );
 }
 
@@ -344,10 +393,10 @@ sub use_db_and_get_dbname {
     ok( $@, "$func - called with garbage arg " );
 
     my $orig_db = $Util->get_dbname;
-    ok( $Util->use_db('mysql'),   "$func - use_db mysql " );
+    ok( $Util->use_db('mysql'),       "$func - use_db mysql " );
     ok( $Util->get_dbname eq 'mysql', "$func - get_dbname = mysql " );
 
-    ok( $Util->use_db($orig_db),   "$func - use_db $orig_db" );
+    ok( $Util->use_db($orig_db),       "$func - use_db $orig_db" );
     ok( $Util->get_dbname eq $orig_db, "$func - get_dbname = $orig_db " );
 }
 

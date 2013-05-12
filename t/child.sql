@@ -62,7 +62,16 @@ CREATE TABLE depth_2a(
 )ENGINE=INNODB
 ;
 
-
+--
+-- TABLE: depth_3a
+--
+CREATE TABLE depth_3a(
+    depth_3a_id     INT     AUTO_INCREMENT,
+    depth_1a_id    INT    NOT NULL,
+    PRIMARY KEY (depth_3a_id),
+    FOREIGN KEY (depth_1a_id) REFERENCES depth_2a(depth_1a_id)
+)ENGINE=INNODB
+;
 
 -- 
 -- TABLE: table_a 

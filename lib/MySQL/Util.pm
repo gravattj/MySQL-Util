@@ -435,8 +435,10 @@ having to worry about the object's internal cache (see clear_cache()).
 =cut
 
 sub apply_ddl {
-    my $self       = shift;
-    my $stmts_aref = shift;
+    args_pos
+        # required
+        my $self       => 'Object',
+        my $stmts_aref => 'ArrayRef';
 
     foreach my $stmt (@$stmts_aref) {
         $self->_dbh->do($stmt);
@@ -445,7 +447,7 @@ sub apply_ddl {
     $self->clear_cache;
 }
 
-=item describe_column(table => $table, column => $column);
+=item describe_column(table => $table, column => $column)
 
 Returns a hashref for the requested column.
 
@@ -482,7 +484,7 @@ sub describe_column {
     }
 }
 
-=item describe_table($table);
+=item describe_table($table)
 
 Returns an arrayref of column info for a given table. 
 
@@ -646,7 +648,7 @@ sub get_ak_index {
     return $href;
 }
 
-=item get_ak_name($table);
+=item get_ak_name($table)
 
 Returns the alternate key constraint name if one exists.  Returns undef if one
 is not found.
@@ -665,7 +667,7 @@ sub get_ak_name {
     return;
 }
 
-=item get_constraint(table => $table, name => $constraint_name);
+=item get_constraint(table => $table, name => $constraint_name)
 
 Returns an arrayref for the requested constraints on a given table.  Throws
 an error if the constraint is not found.
