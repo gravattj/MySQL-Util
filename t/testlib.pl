@@ -103,8 +103,7 @@ sub load_db {
 
     $cmd .= "-p$conf{DBI_PASS} " if $conf{DBI_PASS};
 
-    # try to find child.sql
-    my $file = 'child.sql';
+    my $file = 'sql';
     
     if (-e $file) {
     }

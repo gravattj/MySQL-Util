@@ -16,7 +16,7 @@ README
 t/00-load_util.t
 t/15-cache.t
 t/20-util.t
-t/child.sql
+t/sql
 t/manifest.t
 t/parent.sql
 #t/pod-coverage.t
