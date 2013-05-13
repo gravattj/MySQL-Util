@@ -215,7 +215,6 @@ sub create_data {
 		),
 		"$func - create data with default hint"
 	);
-
 }
 
 sub get_row_cnt {

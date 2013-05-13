@@ -13,7 +13,7 @@ use Data::Dumper;
 
 ###### GLOBAL VARIABLES ######
 
-use vars qw($Host $DbName $User $Pass $Table $RowCount $Util $Defaults);
+use vars qw($Host $DbName $User $Pass $Table $RowCount $Util $Defaults $Conf);
 
 ###### MAIN PROGRAM ######
 
@@ -25,7 +25,8 @@ my %defaults = split( /,/, $Defaults ) if $Defaults;
 $Util->create_data(
     table    => $Table,
     rows     => $RowCount,
-    defaults => {%defaults}
+    defaults => {%defaults},
+    conf => $Conf
 );
 
 ###### END MAIN #######
@@ -59,6 +60,7 @@ sub parse_cmd_line {
         "n=s"    => \$Table,
         "c=s"    => \$RowCount,
         "a=s"    => \$Defaults,
+        "f=s"    => \$Conf,
         "help|?" => \$help
     );
 
@@ -89,6 +91,7 @@ sub print_usage {
       . "\t-c <row count>\n"
       . "\t[-p <pass>]\n"
       . "\t[-a <default column values in csv key/value pair format>]\n"
+      . "\t[-f <conf file>]\n"
       . "\t[-?] (usage)\n" . "\n";
 
     print "\nExamples:\n"

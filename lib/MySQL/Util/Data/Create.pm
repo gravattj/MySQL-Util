@@ -8,6 +8,8 @@ use Smart::Args;
 use feature 'state';
 use List::MoreUtils 'uniq';
 use Carp 'croak';
+use Config::General;
+use Text::Lorem::More;
 
 =head1 NAME
 
@@ -161,6 +163,80 @@ sub _create_factory_method {
 	return $method;
 }
 
+sub _parse_fq_col {
+	args_pos
+
+		# required
+		my $self => 'Object',
+		my $col  => 'Str';
+
+	my @a = split( /\./, $col );
+
+	confess "unable to parse column name: $col" if @a > 3;
+
+	if ( @a == 3 ) {
+		return @a;
+	}
+	elsif ( @a == 2 ) {
+		return ( undef, @a );
+	}
+
+	return ( '', '', $a[0] );
+}
+
+sub _apply_defaults {
+	args
+
+		# required
+		my $self  => 'Object',
+		my $table => 'Str',
+
+		# optional
+		my $defaults => { isa => 'HashRef', default => {}, optional => 1 },
+		my $conf     => 'Str';
+
+	my $defaults_href;
+
+	if ($conf) {
+		my $config = new Config::General($conf);
+		my %config = $config->getall;
+
+		foreach my $col ( keys %config ) {
+			my $val = $config{$col};
+			
+			my ( $dbname, $t, $c ) = $self->_parse_fq_col($col);
+			if ( $t eq $table ) {
+				$defaults_href->{$c} = $val;
+			}
+			else {
+				$defaults_href->{$col} = $val;
+			}
+		}
+	}
+
+	foreach my $col ( keys %$defaults ) {
+		# command line overrides conf file values
+		my ( $dbname, $t, $c ) = $self->_parse_fq_col($col);
+		if ( $t eq $table ) {
+			$defaults_href->{$c} = $defaults->{$col};
+		}
+		else {
+			$defaults_href->{$col} = $defaults->{$col};
+		}
+	}
+
+	return $defaults_href;
+}
+
+sub firstname {
+	args_pos
+		my $self => 'Object';	
+		
+	my $lorem = Text::Lorem::More->new;
+	
+	return $lorem->generate("+firstname");
+}
+
 sub create_data {
 	args
 
@@ -170,9 +246,14 @@ sub create_data {
 		my $rows  => 'Int',
 
 		# optional
-		my $defaults => { isa => 'HashRef', default => {}, optional => 1 };
+		my $defaults => { isa => 'HashRef', default => {}, optional => 1 },
+		my $conf     => 'Str';
 
-	my $defaults_href = $defaults;
+	my $defaults_href = $self->_apply_defaults(
+		table    => $table,
+		defaults => $defaults,
+		conf     => $conf
+	);
 
 	# table MUST be in the current schema
 	if ( $table =~ /^(\w+)\.(\w+)/ ) {
@@ -193,7 +274,7 @@ sub create_data {
 	for ( my $i = 0; $i < $rows; $i++ ) {
 		my %col_data = %$defaults_href;
 		$self->_verbose( "default data\n" . Dumper( \%col_data ) );
-
+$col_data{tester} = $self->firstname;
 		$self->_get_pk_data( table => $table, col_data_href => \%col_data );
 		$self->_verbose( "after pk data\n" . Dumper( \%col_data ) );
 
