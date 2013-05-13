@@ -77,28 +77,28 @@ our $VERSION = '0.25';
 #
 
 has 'dsn' => (
-    is       => 'ro',
-    isa      => 'Str',
-    required => 1
+	is       => 'ro',
+	isa      => 'Str',
+	required => 1
 );
 
 has 'user' => (
-    is       => 'ro',
-    isa      => 'Str',
-    required => 1
+	is       => 'ro',
+	isa      => 'Str',
+	required => 1
 );
 
 has 'pass' => (
-    is       => 'ro',
-    required => 0,
-    default  => undef
+	is       => 'ro',
+	required => 0,
+	default  => undef
 );
 
 has 'span' => (
-    is       => 'ro',
-    isa      => 'Int',
-    required => 0,
-    default  => 0
+	is       => 'ro',
+	isa      => 'Int',
+	required => 0,
+	default  => 0
 );
 
 #
@@ -106,300 +106,305 @@ has 'span' => (
 #
 
 has '_dbh' => (
-    is       => 'ro',
-    writer   => '_set_dbh',
-    init_arg => undef,        # By setting the init_arg to undef, we make it
-         # impossible to set this attribute when creating a new object.
+	is       => 'ro',
+	writer   => '_set_dbh',
+	init_arg => undef,        # By setting the init_arg to undef, we make it
+	     # impossible to set this attribute when creating a new object.
 );
 
 has '_index_cache' => (
-    is       => 'rw',
-    isa      => 'HashRef[MySQL::Util::Data::Cache]',
-    init_arg => undef,
-    default  => sub { {} }
+	is       => 'rw',
+	isa      => 'HashRef[MySQL::Util::Data::Cache]',
+	init_arg => undef,
+	default  => sub { {} }
 );
 
 has '_constraint_cache' => (
-    is       => 'rw',
-    isa      => 'HashRef[MySQL::Util::Data::Cache]',
-    init_arg => undef,
-    default  => sub { {} }
+	is       => 'rw',
+	isa      => 'HashRef[MySQL::Util::Data::Cache]',
+	init_arg => undef,
+	default  => sub { {} }
 );
 
 has '_depth_cache' => (
-    is       => 'rw',
-    isa      => 'HashRef',
-    init_arg => undef,
-    default  => sub { {} }
+	is       => 'rw',
+	isa      => 'HashRef',
+	init_arg => undef,
+	default  => sub { {} }
 );
 
 has '_describe_cache' => (
-    is       => 'rw',
-    isa      => 'HashRef',
-    init_arg => undef,
-    default  => sub { {} }
+	is       => 'rw',
+	isa      => 'HashRef',
+	init_arg => undef,
+	default  => sub { {} }
 );
 
 has '_schema' => (
-    is       => 'rw',
-    isa      => 'Str',
-    required => 0,
-    init_arg => undef,
+	is       => 'rw',
+	isa      => 'Str',
+	required => 0,
+	init_arg => undef,
 );
 
 has _verbose_funcs => (
-    is       => 'rw',
-    isa      => 'HashRef',
-    required => 0,
-    default  => sub { {} },
+	is       => 'rw',
+	isa      => 'HashRef',
+	required => 0,
+	default  => sub { {} },
 );
 
 #
 # this gets automatically invoked sub the constructor#__AFTER
 #
 sub BUILD {
-    my $self = shift;
+	my $self = shift;
 
-    if ( defined $ENV{VERBOSE_FUNCS} ) {
-        my $vf = $self->_verbose_funcs;
+	if ( defined $ENV{VERBOSE_FUNCS} ) {
+		my $vf = $self->_verbose_funcs;
 
-        foreach my $func ( split /[,|:]/, $ENV{VERBOSE_FUNCS} ) {
-            $vf->{$func} = 1;
-        }
+		foreach my $func ( split /[,|:]/, $ENV{VERBOSE_FUNCS} ) {
+			$vf->{$func} = 1;
+		}
 
-        $self->_verbose_funcs($vf);
-    }
+		$self->_verbose_funcs($vf);
+	}
 
-    my $dbh = DBI->connect(
-        $self->dsn,
-        $self->user,
-        $self->pass,
-        {   RaiseError       => 1,
-            FetchHashKeyName => 'NAME_uc',
-            AutoCommit       => 0,           # dbd::mysql workaround
-            PrintError       => 0
-        }
-    );
+	my $dbh = DBI->connect(
+		$self->dsn,
+		$self->user,
+		$self->pass,
+		{   RaiseError       => 1,
+			FetchHashKeyName => 'NAME_uc',
+			AutoCommit       => 0,           # dbd::mysql workaround
+			PrintError       => 0
+		}
+	);
 
-    $dbh->{AutoCommit} = 1;                  # dbd::mysql workaround
+	$dbh->{AutoCommit} = 1;                  # dbd::mysql workaround
 
-    my $schema = $dbh->selectrow_arrayref("select schema()")->[0];
-    if ($schema) {
-        $self->_schema($schema);
-    }
+	my $schema = $dbh->selectrow_arrayref("select schema()")->[0];
+	if ($schema) {
+		$self->_schema($schema);
+	}
 
-    $self->_set_dbh($dbh);
+	$self->_set_dbh($dbh);
 }
 
 #################################################################
 #################### PRIVATE METHODS ############################
 #################################################################
 
-sub _get_ak_constraint_arrayref {
-    my $self = shift;
-    my $table = shift || confess "missing table arg";
-
-    my $href = $self->get_ak_constraint($table);
-
-    my $ak_name = ( keys %$href )[0];
-    if ($ak_name) {
-        return $href->{$ak_name};
-    }
-
-    return [];
-}
+#sub _get_ak_constraint_arrayref {
+#	args
+#		 my $self => 'Object',
+#		 my $table => 'Str',
+#		 my $name => 'Str';
+#
+#    my $href = $self->get_ak_constraints($table);
+#
+#	if (defined $href->{$name}) {
+#		return $href->{$name};
+#	}
+#
+#	confess "can't find ak constraint: $name";
+#}
 
 sub _get_fk_column {
-    my $self = shift;
-    my %a    = @_;
+	my $self = shift;
+	my %a    = @_;
 
-    my $table  = $a{table}  || confess "missing table arg";
-    my $column = $a{column} || confess "missing column arg";
+	my $table  = $a{table}  || confess "missing table arg";
+	my $column = $a{column} || confess "missing column arg";
 
-    my $fks_href = $self->get_fk_constraints($table);
+	my $fks_href = $self->get_fk_constraints($table);
 
-    foreach my $fk_name ( keys %$fks_href ) {
+	foreach my $fk_name ( keys %$fks_href ) {
 
-        foreach my $fk_href ( @{ $fks_href->{$fk_name} } ) {
+		foreach my $fk_href ( @{ $fks_href->{$fk_name} } ) {
 
-            if ( $fk_href->{COLUMN_NAME} eq $column ) {
-                return $fk_href;
-            }
-        }
-    }
+			if ( $fk_href->{COLUMN_NAME} eq $column ) {
+				return $fk_href;
+			}
+		}
+	}
 
-    confess "couldn't find where $table.$column is part of an fk?";
+	confess "couldn't find where $table.$column is part of an fk?";
 }
 
 sub _get_indexes_arrayref {
-    my $self  = shift;
-    my $table = shift;
+	my $self  = shift;
+	my $table = shift;
 
-    my $cache = '_index_cache';
+	my $cache = '_index_cache';
 
-    if ( defined( $self->$cache->{$table} ) ) {
-        return $self->$cache->{$table}->data;
-    }
+	if ( defined( $self->$cache->{$table} ) ) {
+		return $self->$cache->{$table}->data;
+	}
 
-    my $dbh = $self->_dbh;
-    my $sth = $dbh->prepare("show indexes in $table");
-    $sth->execute;
+	my $dbh = $self->_dbh;
+	my $sth = $dbh->prepare("show indexes in $table");
+	$sth->execute;
 
-    my $aref = [];
-    while ( my $href = $sth->fetchrow_hashref ) {
-        push( @$aref, {%$href} );
-    }
+	my $aref = [];
+	while ( my $href = $sth->fetchrow_hashref ) {
+		push( @$aref, {%$href} );
+	}
 
-    $self->$cache->{$table} = MySQL::Util::Data::Cache->new( data => $aref );
-    return $aref;
+	$self->$cache->{$table} = MySQL::Util::Data::Cache->new( data => $aref );
+	return $aref;
 }
 
 sub _fq {
-    args
-        # required
-        my $self  => 'Object',
-        my $table => 'Str',
+	args
 
-        # optional
-        my $fq     => { isa => 'Int',       optional => 1, default => 1 },
-        my $schema => { isa => 'Str|Undef', optional => 1 };
+		# required
+		my $self  => 'Object',
+		my $table => 'Str',
 
-    if ($fq) {
-        if ( $table =~ /\w\.\w/ ) {
-            return $table;
-        }
-        elsif ($schema) {
-            return "$schema.$table";
-        }
+		# optional
+		my $fq     => { isa => 'Int',       optional => 1, default => 1 },
+		my $schema => { isa => 'Str|Undef', optional => 1 };
 
-        return $self->_schema . ".$table";
-    }
+	if ($fq) {
+		if ( $table =~ /\w\.\w/ ) {
+			return $table;
+		}
+		elsif ($schema) {
+			return "$schema.$table";
+		}
 
-    if ( $table =~ /^(\w+)\.(\w+)$/ ) {
-        my $curr = $self->_schema;
+		return $self->_schema . ".$table";
+	}
 
-        confess "can't remove schema name from table name $table because we "
-            . "are not in the same db context (incoming fq table = $table, "
-            . "current schema = $curr"
-            if $curr ne $1;
+	if ( $table =~ /^(\w+)\.(\w+)$/ ) {
+		my $curr = $self->_schema;
 
-        return $2;
-    }
+		confess "can't remove schema name from table name $table because we "
+			. "are not in the same db context (incoming fq table = $table, "
+			. "current schema = $curr"
+			if $curr ne $1;
 
-    return $table;
+		return $2;
+	}
+
+	return $table;
 }
 
 sub _un_fq {
-    args_pos
-        # required
-        my $self  => 'Object',
-        my $table => 'Str';
+	args_pos
 
-    if ( $table =~ /^(\w+)\.(\w+)$/ ) {
-        return ( $1, $2 );
-    }
+		# required
+		my $self  => 'Object',
+		my $table => 'Str';
 
-    return ( $self->_schema, $table );
+	if ( $table =~ /^(\w+)\.(\w+)$/ ) {
+		return ( $1, $2 );
+	}
+
+	return ( $self->_schema, $table );
 }
 
 sub _get_fk_ddl {
-    my $self  = shift;
-    my $table = shift;
-    my $fk    = shift;
+	my $self  = shift;
+	my $table = shift;
+	my $fk    = shift;
 
-    my $sql = "show create table $table";
-    my $sth = $self->_dbh->prepare($sql);
-    $sth->execute;
+	my $sql = "show create table $table";
+	my $sth = $self->_dbh->prepare($sql);
+	$sth->execute;
 
-    while ( my @a = $sth->fetchrow_array ) {
+	while ( my @a = $sth->fetchrow_array ) {
 
-        foreach my $data (@a) {
-            my @b = split( /\n/, $data );
+		foreach my $data (@a) {
+			my @b = split( /\n/, $data );
 
-            foreach my $item (@b) {
-                if ( $item =~ /CONSTRAINT `$fk` FOREIGN KEY/ ) {
-                    $item =~ s/^\s*//;    # remove leading ws
-                    $item =~ s/\s*//;     # remove trailing ws
-                    $item =~ s/,$//;      # remove trailing comma
+			foreach my $item (@b) {
+				if ( $item =~ /CONSTRAINT `$fk` FOREIGN KEY/ ) {
+					$item =~ s/^\s*//;    # remove leading ws
+					$item =~ s/\s*//;     # remove trailing ws
+					$item =~ s/,$//;      # remove trailing comma
 
-                    return "alter table $table add $item";
-                }
-            }
-        }
-    }
+					return "alter table $table add $item";
+				}
+			}
+		}
+	}
 }
 
 sub _column_exists {
-    my $self = shift;
-    my %a    = @_;
+	my $self = shift;
+	my %a    = @_;
 
-    my $table  = $a{table}  or confess "missing table arg";
-    my $column = $a{column} or confess "missing column arg";
+	my $table  = $a{table}  or confess "missing table arg";
+	my $column = $a{column} or confess "missing column arg";
 
-    my $desc_aref = $self->describe_table($table);
+	my $desc_aref = $self->describe_table($table);
 
-    foreach my $col_href (@$desc_aref) {
+	foreach my $col_href (@$desc_aref) {
 
-        if ( $col_href->{FIELD} eq $column ) {
-            return 1;
-        }
-    }
+		if ( $col_href->{FIELD} eq $column ) {
+			return 1;
+		}
+	}
 
-    return 0;
+	return 0;
 }
 
 sub _verbose {
-    args_pos
-        # required
-        my $self => 'Object',
-        my $msg  => 'Str',
+	args_pos
 
-        # optional
-        my $func_counter => { isa => 'Str', default => 0, optional => 1 };
+		# required
+		my $self => 'Object',
+		my $msg  => 'Str',
 
-    my $caller_func = ( caller(1) )[3];
-    my $caller_line = ( caller(0) )[2];
+		# optional
+		my $func_counter => { isa => 'Str', default => 0, optional => 1 };
 
-    my @caller_func = split( /\::/, $caller_func );
-    my $key = pop @caller_func;
+	my $caller_func = ( caller(1) )[3];
+	my $caller_line = ( caller(0) )[2];
 
-    if ( $self->_verbose_funcs->{$key} ) {
-        print STDERR "[VERBOSE] $caller_func ($caller_line) ";
-        print STDERR "[cnt=$func_counter]" if $func_counter;
-        print STDERR "\n";
+	my @caller_func = split( /\::/, $caller_func );
+	my $key = pop @caller_func;
 
-        chomp $msg;
-        foreach my $nl ( split /\n/, $msg ) {
-            print STDERR "\t$nl\n";
-        }
-    }
+	if ( $self->_verbose_funcs->{$key} ) {
+		print STDERR "[VERBOSE] $caller_func ($caller_line) ";
+		print STDERR "[cnt=$func_counter]" if $func_counter;
+		print STDERR "\n";
+
+		chomp $msg;
+		foreach my $nl ( split /\n/, $msg ) {
+			print STDERR "\t$nl\n";
+		}
+	}
 }
 
 sub _verbose_sql {
-    args_pos
-        # required
-        my $self => 'Object',
-        my $sql  => 'Str',
+	args_pos
 
-        # optional
-        my $func_counter => { isa => 'Int', default => 0, optional => 1 };
+		# required
+		my $self => 'Object',
+		my $sql  => 'Str',
 
-    my $caller_func = ( caller(1) )[3];
-    my $caller_line = ( caller(0) )[2];
+		# optional
+		my $func_counter => { isa => 'Int', default => 0, optional => 1 };
 
-    my @caller_func = split( /\::/, $caller_func );
-    my $key = pop @caller_func;
+	my $caller_func = ( caller(1) )[3];
+	my $caller_line = ( caller(0) )[2];
 
-    if ( $self->_verbose_funcs->{$key} ) {
-        print STDERR "[VERBOSE] $caller_func ($caller_line) ";
-        print STDERR "[cnt=$func_counter]" if $func_counter;
-        print STDERR "\n";
+	my @caller_func = split( /\::/, $caller_func );
+	my $key = pop @caller_func;
 
-        $sql = SQL::Beautify->new( query => $sql )->beautify;
-        foreach my $l ( split /\n/, $sql ) {
-            print STDERR "\t$l\n";
-        }
-    }
+	if ( $self->_verbose_funcs->{$key} ) {
+		print STDERR "[VERBOSE] $caller_func ($caller_line) ";
+		print STDERR "[cnt=$func_counter]" if $func_counter;
+		print STDERR "\n";
+
+		$sql = SQL::Beautify->new( query => $sql )->beautify;
+		foreach my $l ( split /\n/, $sql ) {
+			print STDERR "\t$l\n";
+		}
+	}
 }
 
 #################################################################
@@ -435,16 +440,17 @@ having to worry about the object's internal cache (see clear_cache()).
 =cut
 
 sub apply_ddl {
-    args_pos
-        # required
-        my $self       => 'Object',
-        my $stmts_aref => 'ArrayRef';
+	args_pos
 
-    foreach my $stmt (@$stmts_aref) {
-        $self->_dbh->do($stmt);
-    }
+		# required
+		my $self       => 'Object',
+		my $stmts_aref => 'ArrayRef';
 
-    $self->clear_cache;
+	foreach my $stmt (@$stmts_aref) {
+		$self->_dbh->do($stmt);
+	}
+
+	$self->clear_cache;
 }
 
 =item describe_column(table => $table, column => $column)
@@ -465,23 +471,24 @@ See MySQL documentation for more info on "describe <table>".
 =cut
 
 sub describe_column {
-    args
-        # required
-        my $self   => 'Object',
-        my $table  => 'Str',
-        my $column => 'Str';
+	args
 
-    if ( !$self->_column_exists( table => $table, column => $column ) ) {
-        confess "column $column does not exist in table $table";
-    }
+		# required
+		my $self   => 'Object',
+		my $table  => 'Str',
+		my $column => 'Str';
 
-    my $col_aref = $self->describe_table($table);
+	if ( !$self->_column_exists( table => $table, column => $column ) ) {
+		confess "column $column does not exist in table $table";
+	}
 
-    foreach my $col_href (@$col_aref) {
-        if ( $col_href->{FIELD} =~ /^$column$/i ) {
-            return $col_href;
-        }
-    }
+	my $col_aref = $self->describe_table($table);
+
+	foreach my $col_href (@$col_aref) {
+		if ( $col_href->{FIELD} =~ /^$column$/i ) {
+			return $col_href;
+		}
+	}
 }
 
 =item describe_table($table)
@@ -506,32 +513,32 @@ See MySQL documentation for more info on "describe <table>".
 =cut
 
 sub describe_table {
-    my $self  = shift;
-    my $table = shift;
+	my $self  = shift;
+	my $table = shift;
 
-    $table = $self->_fq( table => $table, fq => 1 );
+	$table = $self->_fq( table => $table, fq => 1 );
 
-    my $cache = '_describe_cache';
+	my $cache = '_describe_cache';
 
-    if ( defined( $self->$cache->{$table} ) ) {
-        return $self->$cache->{$table}->data;
-    }
+	if ( defined( $self->$cache->{$table} ) ) {
+		return $self->$cache->{$table}->data;
+	}
 
-    my $sql = qq{
+	my $sql = qq{
         describe $table
     };
 
-    my $dbh = $self->_dbh;
-    my $sth = $dbh->prepare($sql);
-    $sth->execute;
+	my $dbh = $self->_dbh;
+	my $sth = $dbh->prepare($sql);
+	$sth->execute;
 
-    my @cols;
-    while ( my $row = $sth->fetchrow_hashref ) {
-        push( @cols, {%$row} );
-    }
+	my @cols;
+	while ( my $row = $sth->fetchrow_hashref ) {
+		push( @cols, {%$row} );
+	}
 
-    $self->$cache->{$table} = MySQL::Util::Data::Cache->new( data => \@cols );
-    return \@cols;
+	$self->$cache->{$table} = MySQL::Util::Data::Cache->new( data => \@cols );
+	return \@cols;
 }
 
 =item drop_fks([$table])
@@ -545,46 +552,46 @@ keys on success.  Returns an empty array ref if no foreign keys were found.
 =cut
 
 sub drop_fks {
-    my $self  = shift;
-    my $table = shift;
+	my $self  = shift;
+	my $table = shift;
 
-    my @tables;
-    if ( !defined($table) ) {
-        my $tables_aref = $self->get_tables;
-        return [] if !defined($tables_aref);
+	my @tables;
+	if ( !defined($table) ) {
+		my $tables_aref = $self->get_tables;
+		return [] if !defined($tables_aref);
 
-        @tables = @$tables_aref;
-    }
-    else {
-        push( @tables, $table );
-    }
+		@tables = @$tables_aref;
+	}
+	else {
+		push( @tables, $table );
+	}
 
-    my @ret;
-    foreach my $table (@tables) {
+	my @ret;
+	foreach my $table (@tables) {
 
-        my $fqtn     = $self->_schema . ".$table";
-        my $fks_href = $self->get_fk_constraints($table);
+		my $fqtn     = $self->_schema . ".$table";
+		my $fks_href = $self->get_fk_constraints($table);
 
-        foreach my $fk ( keys %$fks_href ) {
+		foreach my $fk ( keys %$fks_href ) {
 
-            push( @ret, $self->_get_fk_ddl( $table, $fk ) );
+			push( @ret, $self->_get_fk_ddl( $table, $fk ) );
 
-            my $sql = qq{
+			my $sql = qq{
                 alter table $table
                 drop foreign key $fk
             };
-            $self->_dbh->do($sql);
+			$self->_dbh->do($sql);
 
-            $self->_constraint_cache->{$fqtn} = undef;
-        }
-    }
+			$self->_constraint_cache->{$fqtn} = undef;
+		}
+	}
 
-    return [@ret];
+	return [@ret];
 }
 
-=item get_ak_constraint($table)
+=item get_ak_constraints($table)
 
-Returns a hashref of the alternate key constraint for a given table.  Returns
+Returns a hashref of the alternate key constraints for a given table.  Returns
 an empty hashref if none were found.  The primary key is excluded from the
 returned data.  
 
@@ -596,28 +603,27 @@ See "get_constraints" for a list of the hash elements in each column.
 
 =cut
 
-sub get_ak_constraint {
-    my $self = shift;
-    my $table = shift or confess "missing table arg";
+sub get_ak_constraints {
+	my $self = shift;
+	my $table = shift or confess "missing table arg";
 
-    $table = $self->_fq( table => $table, fq => 1 );
+	$table = $self->_fq( table => $table, fq => 1 );
 
-    my $cons = $self->get_constraints($table);
+	my $cons = $self->get_constraints($table);
 
-    foreach my $con_name ( keys(%$cons) ) {
-        if ( $cons->{$con_name}->[0]->{CONSTRAINT_TYPE} eq 'UNIQUE' ) {
-            my $ret;
-            $ret->{$con_name} = $cons->{$con_name};
-            return $ret;
-        }
-    }
+	my $ret;
+	foreach my $con_name ( keys(%$cons) ) {
+		if ( $cons->{$con_name}->[0]->{CONSTRAINT_TYPE} eq 'UNIQUE' ) {
+			$ret->{$con_name} = $cons->{$con_name};
+		}
+	}
 
-    return {};
+	return $ret;
 }
 
-=item get_ak_index($table)
+=item get_ak_indexes($table)
 
-Returns a hashref of the alternate key index for a given table.  Returns
+Returns a hashref of the alternate key indexes for a given table.  Returns
 an empty hashref if one was not found.
 
 The structure of the returned data is:
@@ -628,43 +634,50 @@ See get_indexes for a list of hash elements in each column.
     
 =cut
 
-sub get_ak_index {
-    my $self  = shift;
-    my $table = shift;
+sub get_ak_indexs {
 
-    if ( $table !~ /\./ ) {
-        $table = $self->_schema . ".$table";
-    }
-
-    my $href    = {};
-    my $indexes = $self->get_indexes($table);
-
-    foreach my $index ( keys(%$indexes) ) {
-        if ( $indexes->{$index}->[0]->{NON_UNIQUE} == 0 ) {
-            $href->{$index} = $indexes->{$index};
-        }
-    }
-
-    return $href;
+	# for backwards compatibility
+	my $self = shift;
+	return $self->get_ak_indexes(@_);
 }
 
-=item get_ak_name($table)
+sub get_ak_indexes {
+	args_pos my $self => 'Object',
+		my $table     => 'Str';
 
-Returns the alternate key constraint name if one exists.  Returns undef if one
-is not found.
+	if ( $table !~ /\./ ) {
+		$table = $self->_schema . ".$table";
+	}
+
+	my $href    = {};
+	my $indexes = $self->get_indexes($table);
+
+	foreach my $index ( keys(%$indexes) ) {
+		if ( $indexes->{$index}->[0]->{NON_UNIQUE} == 0 ) {
+			$href->{$index} = $indexes->{$index};
+		}
+	}
+
+	return $href;
+}
+
+=item get_ak_names($table)
+
+Returns an arrayref of alternate key constraints.  Returns undef if none
+were found.
 
 =cut
 
-sub get_ak_name {
-    my $self = shift;
-    my $table = shift || confess "missing table arg";
+sub get_ak_names {
+	my $self = shift;
+	my $table = shift || confess "missing table arg";
 
-    if ( $self->has_ak($table) ) {
-        my $href = $self->get_ak_constraint($table);
-        return ( keys %$href )[0];
-    }
+	if ( $self->has_ak($table) ) {
+		my $href = $self->get_ak_constraints($table);
+		return ( keys %$href );
+	}
 
-    return;
+	return;
 }
 
 =item get_constraint(table => $table, name => $constraint_name)
@@ -683,93 +696,94 @@ Hash elements for each column:
 =cut
 
 sub get_constraint {
-    args
-        # required
-        my $self => 'Object',
-        my $name => 'Str',
+	args
 
-        # optional
-        my $schema => { isa => 'Str', optional => 1 },
-        my $table  => { isa => 'Str', optional => 1 };
+		# required
+		my $self => 'Object',
+		my $name => 'Str',
 
-    my ( $unfq_schema, $unfq_table, $fq_table );
+		# optional
+		my $schema => { isa => 'Str', optional => 1 },
+		my $table  => { isa => 'Str', optional => 1 };
 
-    if ( defined $table ) {
-        ( $unfq_schema, $unfq_table ) = $self->_un_fq($table);
-        if ($schema) {
-            if ( $unfq_schema ne $schema ) {
-                confess "schema arg $schema does not match table $table";
-            }
-        }
+	my ( $unfq_schema, $unfq_table, $fq_table );
 
-        $fq_table = $self->_fq(
-            table  => $unfq_table,
-            fq     => 1,
-            schema => $unfq_schema
-        );
-    }
+	if ( defined $table ) {
+		( $unfq_schema, $unfq_table ) = $self->_un_fq($table);
+		if ($schema) {
+			if ( $unfq_schema ne $schema ) {
+				confess "schema arg $schema does not match table $table";
+			}
+		}
 
-    if ( defined $fq_table ) {
-        my $cons_href = $self->get_constraints($fq_table);
+		$fq_table = $self->_fq(
+			table  => $unfq_table,
+			fq     => 1,
+			schema => $unfq_schema
+		);
+	}
 
-        foreach my $cons_name ( keys %$cons_href ) {
-            if ( $cons_name eq $name ) {
-                return $cons_href->{$cons_name};
-            }
-        }
+	if ( defined $fq_table ) {
+		my $cons_href = $self->get_constraints($fq_table);
 
-        confess "failed to find constraint $name for table $fq_table";
-    }
+		foreach my $cons_name ( keys %$cons_href ) {
+			if ( $cons_name eq $name ) {
+				return $cons_href->{$cons_name};
+			}
+		}
 
-    $schema = $self->_schema if !$schema;
+		confess "failed to find constraint $name for table $fq_table";
+	}
 
-    #
-    # search cache for the constraint name across tables
-    #
-    my $cache = '_constraint_cache';
+	$schema = $self->_schema if !$schema;
 
-    foreach my $t ( keys %{ $self->$cache } ) {
+	#
+	# search cache for the constraint name across tables
+	#
+	my $cache = '_constraint_cache';
 
-        if ( defined( $self->$cache->{$t} ) ) {
-            my $data_href = $self->$cache->{$t}->data;
+	foreach my $t ( keys %{ $self->$cache } ) {
 
-            foreach my $cons_name ( keys %$data_href ) {
-                if ( $cons_name eq $name ) {
+		if ( defined( $self->$cache->{$t} ) ) {
+			my $data_href = $self->$cache->{$t}->data;
 
-                    return $data_href->{$cons_name};
-                }
-            }
-        }
-    }
+			foreach my $cons_name ( keys %$data_href ) {
+				if ( $cons_name eq $name ) {
 
-    my $sql = qq{
+					return $data_href->{$cons_name};
+				}
+			}
+		}
+	}
+
+	my $sql = qq{
         select distinct tc.table_name
         from information_schema.table_constraints tc
         where  tc.constraint_schema = '$schema'
     };
 
-    if ( !$self->span ) {
-        $sql .= qq{
+	if ( !$self->span ) {
+		$sql .= qq{
           and (referenced_table_schema = '$schema' or referenced_table_schema is null)
         };
-    }
+	}
 
-    my $dbh = $self->_dbh;
-    my $sth = $dbh->prepare($sql);
-    $sth->execute;
+	my $dbh = $self->_dbh;
+	my $sth = $dbh->prepare($sql);
+	$sth->execute;
 
-    while ( my ($t) = $sth->fetchrow_array ) {
-        my $cons_href = $self->get_constraints( table => $t );
+	while ( my ($t) = $sth->fetchrow_array ) {
+		my $cons_href = $self->get_constraints( table => $t );
 
-        foreach my $cons_name ( keys %$cons_href ) {
-            if ( $cons_name eq $name ) {
-                $sth->finish;
-                return $cons_href->{$cons_name};
-            }
-        }
-    }
+		foreach my $cons_name ( keys %$cons_href ) {
+			if ( $cons_name eq $name ) {
+				$sth->finish;
+				return $cons_href->{$cons_name};
+			}
+		}
+	}
 
-    confess "failed to find constraint name $name";
+	confess "failed to find constraint name $name";
 }
 
 =item get_constraints($table)
@@ -797,22 +811,22 @@ Hash elements for each column:
 =cut
 
 sub get_constraints {
-    my $self = shift;
-    my $table = shift || confess "missing table arg";
+	my $self = shift;
+	my $table = shift || confess "missing table arg";
 
-    $table = $self->_fq( table => $table, fq => 1 );
+	$table = $self->_fq( table => $table, fq => 1 );
 
-    my ( $schema, $table_no_schema ) = split( /\./, $table );
+	my ( $schema, $table_no_schema ) = split( /\./, $table );
 
-    my $cache = '_constraint_cache';
+	my $cache = '_constraint_cache';
 
-    if ( defined( $self->$cache->{$table} ) ) {
-        return $self->$cache->{$table}->data;
-    }
+	if ( defined( $self->$cache->{$table} ) ) {
+		return $self->$cache->{$table}->data;
+	}
 
-    confess "table '$table' does not exist: " if !$self->table_exists($table);
+	confess "table '$table' does not exist: " if !$self->table_exists($table);
 
-    my $sql = qq{
+	my $sql = qq{
         select kcu.constraint_name, tc.constraint_type, column_name, 
           ordinal_position, position_in_unique_constraint, referenced_table_schema,
           referenced_table_name, referenced_column_name, tc.constraint_schema
@@ -825,31 +839,31 @@ sub get_constraints {
           and kcu.constraint_schema = tc.constraint_schema 
     };
 
-    if ( !$self->span ) {
-        $sql .= qq{
+	if ( !$self->span ) {
+		$sql .= qq{
           and (referenced_table_schema = '$schema' or referenced_table_schema is null)
         };
-    }
+	}
 
-    $sql .= qq{ order by constraint_name, ordinal_position };
+	$sql .= qq{ order by constraint_name, ordinal_position };
 
-    my $dbh = $self->_dbh;
-    my $sth = $dbh->prepare($sql);
-    $sth->execute;
+	my $dbh = $self->_dbh;
+	my $sth = $dbh->prepare($sql);
+	$sth->execute;
 
-    my $href = {};
-    while ( my $row = $sth->fetchrow_hashref ) {
+	my $href = {};
+	while ( my $row = $sth->fetchrow_hashref ) {
 
-        my $name = $row->{CONSTRAINT_NAME};
-        if ( !defined( $href->{$name} ) ) { $href->{$name} = [] }
+		my $name = $row->{CONSTRAINT_NAME};
+		if ( !defined( $href->{$name} ) ) { $href->{$name} = [] }
 
-        $row->{TABLE_NAME} = $self->_fq( table => $table, fq => 0 );
+		$row->{TABLE_NAME} = $self->_fq( table => $table, fq => 0 );
 
-        push( @{ $href->{$name} }, {%$row} );
-    }
+		push( @{ $href->{$name} }, {%$row} );
+	}
 
-    $self->$cache->{$table} = MySQL::Util::Data::Cache->new( data => $href );
-    return $href;
+	$self->$cache->{$table} = MySQL::Util::Data::Cache->new( data => $href );
+	return $href;
 }
 
 =item get_dbname()
@@ -859,10 +873,10 @@ Returns the name of the current schema/database.
 =cut
 
 sub get_dbname {
-    my $self = shift;
-    confess "get_dbname does not take any parameters" if @_;
+	my $self = shift;
+	confess "get_dbname does not take any parameters" if @_;
 
-    return $self->_schema;
+	return $self->_schema;
 }
 
 =item get_depth($table)
@@ -887,39 +901,39 @@ If a table has multiple parents, the parent with the highest depth wins.
 =cut
 
 sub get_depth {
-    my $self = shift;
-    my $table = shift or confess "missing table arg";
+	my $self = shift;
+	my $table = shift or confess "missing table arg";
 
-    if ( $table !~ /\./ ) {
-        $table = $self->_schema . ".$table";
-    }
+	if ( $table !~ /\./ ) {
+		$table = $self->_schema . ".$table";
+	}
 
-    my $cache = '_depth_cache';
+	my $cache = '_depth_cache';
 
-    if ( defined( $self->{$cache}->{$table} ) ) {
-        return $self->{$cache}->{$table};
-    }
+	if ( defined( $self->{$cache}->{$table} ) ) {
+		return $self->{$cache}->{$table};
+	}
 
-    my $dbh = $self->_dbh;
+	my $dbh = $self->_dbh;
 
-    my $fk_cons = $self->get_fk_constraints($table);
+	my $fk_cons = $self->get_fk_constraints($table);
 
-    my $depth = 0;
+	my $depth = 0;
 
-    foreach my $fk_name ( keys(%$fk_cons) ) {
-        my $parent_table
-            = $fk_cons->{$fk_name}->[0]->{REFERENCED_TABLE_SCHEMA} . '.'
-            . $fk_cons->{$fk_name}->[0]->{REFERENCED_TABLE_NAME};
+	foreach my $fk_name ( keys(%$fk_cons) ) {
+		my $parent_table
+			= $fk_cons->{$fk_name}->[0]->{REFERENCED_TABLE_SCHEMA} . '.'
+			. $fk_cons->{$fk_name}->[0]->{REFERENCED_TABLE_NAME};
 
-        if ( $parent_table eq $table ) {next}    # self referencing table
+		if ( $parent_table eq $table ) {next}    # self referencing table
 
-        my $parent_depth = $self->get_depth($parent_table);
-        if ( $parent_depth >= $depth ) { $depth = $parent_depth + 1 }
-    }
+		my $parent_depth = $self->get_depth($parent_table);
+		if ( $parent_depth >= $depth ) { $depth = $parent_depth + 1 }
+	}
 
-    $self->{$cache}->{$table} = $depth;
+	$self->{$cache}->{$table} = $depth;
 
-    return $depth;
+	return $depth;
 }
 
 =item get_fk_column_names(table => $table, [name => $constraint_name])
@@ -931,32 +945,33 @@ that participate an any foreign key constraint on the table.
 =cut
 
 sub get_fk_column_names {
-    args
-        # required
-        my $self  => 'Object',
-        my $table => 'Str',
+	args
 
-        # optional
-        my $name => { isa => 'Str', optional => 1 };
+		# required
+		my $self  => 'Object',
+		my $table => 'Str',
 
-    $table = $self->_fq( table => $table, fq => 1 );
+		# optional
+		my $name => { isa => 'Str', optional => 1 };
 
-    my @columns;
+	$table = $self->_fq( table => $table, fq => 1 );
 
-    my $fks_href = $self->get_fk_constraints($table);
+	my @columns;
 
-    foreach my $fk_name ( keys %$fks_href ) {
+	my $fks_href = $self->get_fk_constraints($table);
 
-        next if ( $name and $name ne $fk_name );
+	foreach my $fk_name ( keys %$fks_href ) {
 
-        foreach my $fk_href ( @{ $fks_href->{$fk_name} } ) {
+		next if ( $name and $name ne $fk_name );
 
-            my $col = $fk_href->{COLUMN_NAME};
-            push( @columns, $col );
-        }
-    }
+		foreach my $fk_href ( @{ $fks_href->{$fk_name} } ) {
 
-    return @columns;
+			my $col = $fk_href->{COLUMN_NAME};
+			push( @columns, $col );
+		}
+	}
+
+	return @columns;
 }
 
 =item get_fk_constraints([$table])
@@ -975,48 +990,49 @@ See "get_constraints" for a list of the hash elements in each column.
 =cut
 
 sub get_fk_constraints {
-    args_pos
-        # required
-        my $self => 'Object',
+	args_pos
 
-        # optional
-        my $table => { isa => 'Str', optional => 1 };
+		# required
+		my $self => 'Object',
 
-    if ( defined($table) and $table !~ /\./ ) {
-        $table = $self->_schema . ".$table";
-    }
+		# optional
+		my $table => { isa => 'Str', optional => 1 };
 
-    my @tables;
-    if ( !defined($table) ) {
-        my $tables_aref = $self->get_tables;
-        return {} if !defined($tables_aref);
+	if ( defined($table) and $table !~ /\./ ) {
+		$table = $self->_schema . ".$table";
+	}
 
-        @tables = @$tables_aref;
-    }
-    else {
-        push( @tables, $table );
-    }
+	my @tables;
+	if ( !defined($table) ) {
+		my $tables_aref = $self->get_tables;
+		return {} if !defined($tables_aref);
 
-    my $href = {};
+		@tables = @$tables_aref;
+	}
+	else {
+		push( @tables, $table );
+	}
 
-    foreach my $table (@tables) {
+	my $href = {};
 
-        my $cons_href = $self->get_constraints($table);
-        foreach my $cons_name ( keys(%$cons_href) ) {
+	foreach my $table (@tables) {
 
-            my $cons_aref = $cons_href->{$cons_name};
-            foreach my $col_href (@$cons_aref) {
+		my $cons_href = $self->get_constraints($table);
+		foreach my $cons_name ( keys(%$cons_href) ) {
 
-                my $type = $col_href->{CONSTRAINT_TYPE};
+			my $cons_aref = $cons_href->{$cons_name};
+			foreach my $col_href (@$cons_aref) {
 
-                if ( $type eq 'FOREIGN KEY' ) {
-                    $href->{$cons_name} = [@$cons_aref];
-                }
-            }
-        }
-    }
+				my $type = $col_href->{CONSTRAINT_TYPE};
 
-    return $href;
+				if ( $type eq 'FOREIGN KEY' ) {
+					$href->{$cons_name} = [@$cons_aref];
+				}
+			}
+		}
+	}
+
+	return $href;
 }
 
 =item get_fk_indexes($table)
@@ -1034,44 +1050,44 @@ See "get_indexes" for a list of the hash elements in each column.
 =cut
 
 sub get_fk_indexes {
-    my $self  = shift;
-    my $table = shift;
+	args_pos my $self => 'Object',
+		my $table     => 'Str';
 
-    if ( $table !~ /\./ ) {
-        $table = $self->_schema . ".$table";
-    }
+	if ( $table !~ /\./ ) {
+		$table = $self->_schema . ".$table";
+	}
 
-    my $href    = {};
-    my $cons    = $self->get_fk_constraints($table);
-    my $indexes = $self->get_indexes($table);
+	my $href    = {};
+	my $cons    = $self->get_fk_constraints($table);
+	my $indexes = $self->get_indexes($table);
 
-    foreach my $con_name ( keys(%$cons) ) {
-        my @con_cols = @{ $cons->{$con_name} };
+	foreach my $con_name ( keys(%$cons) ) {
+		my @con_cols = @{ $cons->{$con_name} };
 
-        foreach my $index_name ( keys(%$indexes) ) {
-            my @index_cols = @{ $indexes->{$index_name} };
+		foreach my $index_name ( keys(%$indexes) ) {
+			my @index_cols = @{ $indexes->{$index_name} };
 
-            if ( scalar(@con_cols) == scalar(@index_cols) ) {
+			if ( scalar(@con_cols) == scalar(@index_cols) ) {
 
-                my $match = 1;
-                for ( my $i = 0; $i < scalar(@con_cols); $i++ ) {
-                    if ( $index_cols[$i]->{COLUMN_NAME} ne
-                        $con_cols[$i]->{COLUMN_NAME} )
-                    {
-                        $match = 0;
-                        last;
-                    }
-                }
+				my $match = 1;
+				for ( my $i = 0; $i < scalar(@con_cols); $i++ ) {
+					if ( $index_cols[$i]->{COLUMN_NAME} ne
+						$con_cols[$i]->{COLUMN_NAME} )
+					{
+						$match = 0;
+						last;
+					}
+				}
 
-                if ($match) {
-                    $href->{$index_name} = $indexes->{$index_name};
-                    last;
-                }
-            }
-        }
-    }
+				if ($match) {
+					$href->{$index_name} = $indexes->{$index_name};
+					last;
+				}
+			}
+		}
+	}
 
-    return $href;
+	return $href;
 }
 
 =item get_indexes($table)
@@ -1101,26 +1117,26 @@ Hash elements for each column:
 =cut
 
 sub get_indexes {
-    my $self = shift;
-    my $table = shift or confess "missing table arg";
+	my $self = shift;
+	my $table = shift or confess "missing table arg";
 
-    if ( $table !~ /\./ ) {
-        $table = $self->_schema . ".$table";
-    }
+	if ( $table !~ /\./ ) {
+		$table = $self->_schema . ".$table";
+	}
 
-    my %h       = ();
-    my $indexes = $self->_get_indexes_arrayref($table);
+	my %h       = ();
+	my $indexes = $self->_get_indexes_arrayref($table);
 
-    foreach my $index (@$indexes) {
-        my $key_name = $index->{KEY_NAME};
-        my $seq      = $index->{SEQ_IN_INDEX};
+	foreach my $index (@$indexes) {
+		my $key_name = $index->{KEY_NAME};
+		my $seq      = $index->{SEQ_IN_INDEX};
 
-        if ( !exists( $h{$key_name} ) ) { $h{$key_name} = [] }
+		if ( !exists( $h{$key_name} ) ) { $h{$key_name} = [] }
 
-        $h{$key_name}->[ $seq - 1 ] = $index;
-    }
+		$h{$key_name}->[ $seq - 1 ] = $index;
+	}
 
-    return \%h;
+	return \%h;
 }
 
 =item get_max_depth()
@@ -1132,19 +1148,19 @@ See "get_depth" for additional info.
 =cut
 
 sub get_max_depth {
-    my $self = shift;
+	my $self = shift;
 
-    my $dbh = $self->_dbh;
+	my $dbh = $self->_dbh;
 
-    my $tables = $self->get_tables();
+	my $tables = $self->get_tables();
 
-    my $max = 0;
-    foreach my $table (@$tables) {
-        my $depth = $self->get_depth($table);
-        if ( $depth > $max ) { $max = $depth }
-    }
+	my $max = 0;
+	foreach my $table (@$tables) {
+		my $depth = $self->get_depth($table);
+		if ( $depth > $max ) { $max = $depth }
+	}
 
-    return $max;
+	return $max;
 }
 
 =item get_other_constraints($table)
@@ -1161,30 +1177,30 @@ See "get_constraints" for a list of the hash elements in each column.
 =cut
 
 sub get_other_constraints {
-    my $self  = shift;
-    my $table = shift;
+	args_pos my $self => 'Object',
+		my $table     => 'Str';
 
-    if ( $table !~ /\./ ) {
-        $table = $self->_schema . ".$table";
-    }
+	if ( $table !~ /\./ ) {
+		$table = $self->_schema . ".$table";
+	}
 
-    my $fk = $self->get_fk_constraints($table);
-    my $ak = $self->get_ak_constraints($table);
+	my $fk = $self->get_fk_constraints($table);
+	my $ak = $self->get_ak_constraints($table);
 
-    my $href = {};
-    my $cons = $self->get_constraints($table);
+	my $href = {};
+	my $cons = $self->get_constraints($table);
 
-    foreach my $con_name ( keys(%$cons) ) {
-        my $type = $cons->{$con_name}->[0]->{CONSTRAINT_TYPE};
+	foreach my $con_name ( keys(%$cons) ) {
+		my $type = $cons->{$con_name}->[0]->{CONSTRAINT_TYPE};
 
-        next if $type eq 'PRIMARY KEY';
-        next if $type eq 'FOREIGN KEY';
-        next if $type eq 'UNIQUE';
+		next if $type eq 'PRIMARY KEY';
+		next if $type eq 'FOREIGN KEY';
+		next if $type eq 'UNIQUE';
 
-        $href->{$con_name} = $cons->{$con_name};
-    }
+		$href->{$con_name} = $cons->{$con_name};
+	}
 
-    return $href;
+	return $href;
 }
 
 =item get_other_indexes($table)
@@ -1201,28 +1217,30 @@ See "get_indexes" for a list of the hash elements in each column.
 =cut
 
 sub get_other_indexes {
-    my $self  = shift;
-    my $table = shift;
+	args_pos
+		# required
+		my $self  => 'Object',
+		my $table => 'Str';
 
-    if ( $table !~ /\./ ) {
-        $table = $self->_schema . ".$table";
-    }
+	if ( $table !~ /\./ ) {
+		$table = $self->_schema . ".$table";
+	}
 
-    my $ak = $self->get_ak_indexes($table);
-    my $fk = $self->get_fk_indexes($table);
+	my $ak = $self->get_ak_indexes($table);
+	my $fk = $self->get_fk_indexes($table);
 
-    my $href    = {};
-    my $indexes = $self->get_indexes($table);
+	my $href    = {};
+	my $indexes = $self->get_indexes($table);
 
-    foreach my $name ( keys %$indexes ) {
-        next if $name eq 'PRIMARY';
-        next if defined( $ak->{$name} );
-        next if defined( $fk->{$name} );
+	foreach my $name ( keys %$indexes ) {
+		next if $name eq 'PRIMARY';
+		next if defined( $ak->{$name} );
+		next if defined( $fk->{$name} );
 
-        $href->{$name} = $indexes->{$name};
-    }
+		$href->{$name} = $indexes->{$name};
+	}
 
-    return $href;
+	return $href;
 }
 
 =item get_pk_constraint($table)
@@ -1239,22 +1257,22 @@ See "get_constraints" for a list of hash elements in each column.
 =cut
 
 sub get_pk_constraint {
-    my $self  = shift;
-    my $table = shift;
+	my $self  = shift;
+	my $table = shift;
 
-    if ( $table !~ /\./ ) {
-        $table = $self->_schema . ".$table";
-    }
+	if ( $table !~ /\./ ) {
+		$table = $self->_schema . ".$table";
+	}
 
-    my $cons = $self->get_constraints($table);
+	my $cons = $self->get_constraints($table);
 
-    foreach my $con_name ( keys(%$cons) ) {
-        if ( $cons->{$con_name}->[0]->{CONSTRAINT_TYPE} eq 'PRIMARY KEY' ) {
-            return $cons->{$con_name};
-        }
-    }
+	foreach my $con_name ( keys(%$cons) ) {
+		if ( $cons->{$con_name}->[0]->{CONSTRAINT_TYPE} eq 'PRIMARY KEY' ) {
+			return $cons->{$con_name};
+		}
+	}
 
-    return [];
+	return [];
 }
 
 =item get_pk_index($table)
@@ -1271,23 +1289,23 @@ See "get_indexes" for a list of the hash elements in each column.
 =cut
 
 sub get_pk_index {
-    my $self  = shift;
-    my $table = shift;
+	my $self  = shift;
+	my $table = shift;
 
-    #	if ($table !~ /\./) {
-    #		$table = $self->_schema . ".$table";
-    #	}
+	#	if ($table !~ /\./) {
+	#		$table = $self->_schema . ".$table";
+	#	}
 
-    my $href = $self->get_indexes($table);
+	my $href = $self->get_indexes($table);
 
-    foreach my $name ( keys(%$href) ) {
-        if ( $name eq 'PRIMARY' )    # mysql forces this naming convention
-        {
-            return $href->{$name};
-        }
-    }
+	foreach my $name ( keys(%$href) ) {
+		if ( $name eq 'PRIMARY' )    # mysql forces this naming convention
+		{
+			return $href->{$name};
+		}
+	}
 
-    return [];
+	return [];
 }
 
 =item get_pk_name($table)
@@ -1298,14 +1316,14 @@ if one does not exist.
 =cut
 
 sub get_pk_name {
-    my $self = shift;
-    my $table = shift || confess "missing table arg";
+	my $self = shift;
+	my $table = shift || confess "missing table arg";
 
-    if ( $self->has_pk($table) ) {
-        return 'PRIMARY';    # mysql default
-    }
+	if ( $self->has_pk($table) ) {
+		return 'PRIMARY';    # mysql default
+	}
 
-    return;
+	return;
 }
 
 =item get_tables( )
@@ -1316,19 +1334,19 @@ if no tables were found.
 =cut
 
 sub get_tables {
-    my $self = shift;
+	my $self = shift;
 
-    my $dbh = $self->_dbh;
+	my $dbh = $self->_dbh;
 
-    my $tables = undef;
-    my $sth    = $dbh->prepare("show tables");
-    $sth->execute;
+	my $tables = undef;
+	my $sth    = $dbh->prepare("show tables");
+	$sth->execute;
 
-    while ( my ($table) = $sth->fetchrow_array ) {
-        push( @$tables, $table );
-    }
+	while ( my ($table) = $sth->fetchrow_array ) {
+		push( @$tables, $table );
+	}
 
-    return $tables;
+	return $tables;
 }
 
 =item has_ak($table)
@@ -1338,12 +1356,12 @@ Returns true if the table has an alternate key or false if not.
 =cut
 
 sub has_ak {
-    my $self = shift;
-    my $table = shift || confess "missing table arg";
+	my $self = shift;
+	my $table = shift || confess "missing table arg";
 
-    my $ak_aref = $self->_get_ak_constraint_arrayref($table);
+	my $aks_href = $self->get_ak_constraints($table);
 
-    return scalar @$ak_aref;
+	return scalar keys %$aks_href;
 }
 
 =item has_fks($table)
@@ -1353,12 +1371,12 @@ Returns true if the table has foreign keys or false if not.
 =cut
 
 sub has_fks {
-    my $self = shift;
-    my $table = shift || confess "missing table arg";
+	my $self = shift;
+	my $table = shift || confess "missing table arg";
 
-    my $fks_href = $self->get_fk_constraints($table);
+	my $fks_href = $self->get_fk_constraints($table);
 
-    return scalar keys %$fks_href;
+	return scalar keys %$fks_href;
 }
 
 =item has_pk($table)
@@ -1368,12 +1386,12 @@ Returns true if the table has a primary key or false if it does not.
 =cut
 
 sub has_pk {
-    my $self = shift;
-    my $table = shift || confess "missing table arg";
+	my $self = shift;
+	my $table = shift || confess "missing table arg";
 
-    my $pk_aref = $self->get_pk_constraint($table);
+	my $pk_aref = $self->get_pk_constraint($table);
 
-    return scalar @$pk_aref;
+	return scalar @$pk_aref;
 }
 
 =item is_pk_auto_inc($table)
@@ -1384,27 +1402,27 @@ if it does not.
 =cut
 
 sub is_pk_auto_inc {
-    my $self = shift;
-    my $table = shift || confess "missing table arg";
+	my $self = shift;
+	my $table = shift || confess "missing table arg";
 
-    if ( $self->has_pk($table) ) {
-        my $pk_aref = $self->get_pk_constraint($table);
+	if ( $self->has_pk($table) ) {
+		my $pk_aref = $self->get_pk_constraint($table);
 
-        foreach my $col_href (@$pk_aref) {
+		foreach my $col_href (@$pk_aref) {
 
-            my $col_name      = $col_href->{COLUMN_NAME};
-            my $col_desc_href = $self->describe_column(
-                table  => $table,
-                column => $col_name
-            );
+			my $col_name      = $col_href->{COLUMN_NAME};
+			my $col_desc_href = $self->describe_column(
+				table  => $table,
+				column => $col_name
+			);
 
-            if ( $col_desc_href->{EXTRA} =~ /auto/ ) {
-                return 1;
-            }
-        }
-    }
+			if ( $col_desc_href->{EXTRA} =~ /auto/ ) {
+				return 1;
+			}
+		}
+	}
 
-    return 0;
+	return 0;
 }
 
 =item is_column_nullable(table => $table, column => $column)
@@ -1414,19 +1432,20 @@ Returns true if column is nullable or false if it is not.
 =cut
 
 sub is_column_nullable {
-    args
-        # required
-        my $self   => 'Object',
-        my $table  => 'Str',
-        my $column => 'Str';
+	args
 
-    my $desc = $self->describe_column( table => $table, column => $column );
+		# required
+		my $self   => 'Object',
+		my $table  => 'Str',
+		my $column => 'Str';
 
-    if ( $desc->{NULL} eq 'YES' ) {
-        return 1;
-    }
+	my $desc = $self->describe_column( table => $table, column => $column );
 
-    return 0;
+	if ( $desc->{NULL} eq 'YES' ) {
+		return 1;
+	}
+
+	return 0;
 }
 
 =item is_fk_column(table => $table, column => $column)
@@ -1436,25 +1455,25 @@ Returns true if column participates in a foreign key or false if it does not.
 =cut
 
 sub is_fk_column {
-    my $self = shift;
-    my %a    = @_;
+	my $self = shift;
+	my %a    = @_;
 
-    my $table  = $a{table}  || confess "missing table arg";
-    my $column = $a{column} || confess "missing column arg";
+	my $table  = $a{table}  || confess "missing table arg";
+	my $column = $a{column} || confess "missing column arg";
 
-    my $fks_href = $self->get_fk_constraints($table);
+	my $fks_href = $self->get_fk_constraints($table);
 
-    foreach my $fk_name ( keys %$fks_href ) {
+	foreach my $fk_name ( keys %$fks_href ) {
 
-        foreach my $fk_href ( @{ $fks_href->{$fk_name} } ) {
+		foreach my $fk_href ( @{ $fks_href->{$fk_name} } ) {
 
-            if ( $fk_href->{COLUMN_NAME} eq $column ) {
-                return 1;
-            }
-        }
-    }
+			if ( $fk_href->{COLUMN_NAME} eq $column ) {
+				return 1;
+			}
+		}
+	}
 
-    return 0;
+	return 0;
 }
 
 =item is_self_referencing($table, [$name => $constraint_name])
@@ -1466,52 +1485,53 @@ the constraint provided.
 =cut
 
 sub is_self_referencing {
-    args
-        # required
-        my $self  => 'Object',
-        my $table => 'Str',
+	args
 
-        # optional
-        my $name => { isa => 'Str', optional => 1 };
+		# required
+		my $self  => 'Object',
+		my $table => 'Str',
 
-    my $fq_table = $self->_fq( table => $table, fq => 1 );
+		# optional
+		my $name => { isa => 'Str', optional => 1 };
 
-    my $fks_href = $self->get_fk_constraints($table);
+	my $fq_table = $self->_fq( table => $table, fq => 1 );
 
-    foreach my $con_name (%$fks_href) {
-        next if $name and $name ne $con_name;
+	my $fks_href = $self->get_fk_constraints($table);
 
-        #$hashref->{constraint_name}->[ { col1 }, { col2 } ]
-        #
-        #Hash elements for each column:
-        #
-        #    CONSTRAINT_SCHEMA
-        #    CONSTRAINT_TYPE
-        #    COLUMN_NAME
-        #    ORDINAL_POSITION
-        #    POSITION_IN_UNIQUE_CONSTRAINT
-        #    REFERENCED_COLUMN_NAME
-        #    REFERENCED_TABLE_SCHEMA
-        #    REFERENCED_TABLE_NAME
+	foreach my $con_name (%$fks_href) {
+		next if $name and $name ne $con_name;
 
-        foreach my $pos_href ( @{ $fks_href->{$con_name} } ) {
+		#$hashref->{constraint_name}->[ { col1 }, { col2 } ]
+		#
+		#Hash elements for each column:
+		#
+		#    CONSTRAINT_SCHEMA
+		#    CONSTRAINT_TYPE
+		#    COLUMN_NAME
+		#    ORDINAL_POSITION
+		#    POSITION_IN_UNIQUE_CONSTRAINT
+		#    REFERENCED_COLUMN_NAME
+		#    REFERENCED_TABLE_SCHEMA
+		#    REFERENCED_TABLE_NAME
 
-            my $ref_table  = $pos_href->{REFERENCED_TABLE_NAME};
-            my $ref_schema = $pos_href->{REFERENCED_TABLE_SCHEMA};
+		foreach my $pos_href ( @{ $fks_href->{$con_name} } ) {
 
-            my $ref_fq_table = $self->_fq(
-                table  => $ref_table,
-                fq     => 1,
-                schema => $ref_schema
-            );
+			my $ref_table  = $pos_href->{REFERENCED_TABLE_NAME};
+			my $ref_schema = $pos_href->{REFERENCED_TABLE_SCHEMA};
 
-            if ( $ref_fq_table eq $fq_table ) {
-                return 1;
-            }
-        }
-    }
+			my $ref_fq_table = $self->_fq(
+				table  => $ref_table,
+				fq     => 1,
+				schema => $ref_schema
+			);
 
-    return 0;
+			if ( $ref_fq_table eq $fq_table ) {
+				return 1;
+			}
+		}
+	}
+
+	return 0;
 }
 
 =item table_exists($table)
@@ -1521,39 +1541,39 @@ Returns true if table exists.  Otherwise returns false.
 =cut
 
 sub table_exists {
-    my $self = shift;
-    my $table = shift or confess "missing table arg";
+	my $self = shift;
+	my $table = shift or confess "missing table arg";
 
-    my $fq_table = $table;
-    if ( $table !~ /\./ ) {
-        $fq_table = $self->_schema . ".$table";
-    }
+	my $fq_table = $table;
+	if ( $table !~ /\./ ) {
+		$fq_table = $self->_schema . ".$table";
+	}
 
-    my $dbh = $self->_dbh;
+	my $dbh = $self->_dbh;
 
-    my ( $schema, $nofq_table ) = split( /\./, $fq_table );
-    if ( $schema ne $self->_schema ) {
+	my ( $schema, $nofq_table ) = split( /\./, $fq_table );
+	if ( $schema ne $self->_schema ) {
 
-        # quietly change the schema so "show tables like ..." works
-        $dbh->do("use $schema");
-    }
+		# quietly change the schema so "show tables like ..." works
+		$dbh->do("use $schema");
+	}
 
-    my $sql = qq{show tables like '$nofq_table'};
-    my $sth = $dbh->prepare($sql);
-    $sth->execute;
+	my $sql = qq{show tables like '$nofq_table'};
+	my $sth = $dbh->prepare($sql);
+	$sth->execute;
 
-    my $cnt = 0;
-    while ( $sth->fetchrow_array ) {
-        $cnt++;
-    }
+	my $cnt = 0;
+	while ( $sth->fetchrow_array ) {
+		$cnt++;
+	}
 
-    if ( $schema ne $self->_schema ) {
+	if ( $schema ne $self->_schema ) {
 
-        # quietly change schema back
-        $dbh->do( "use " . $self->_schema );
-    }
+		# quietly change schema back
+		$dbh->do( "use " . $self->_schema );
+	}
 
-    return $cnt;
+	return $cnt;
 }
 
 =item use_db($dbname)
@@ -1563,14 +1583,14 @@ Used for switching database context.  Returns true on success.
 =cut
 
 sub use_db {
-    my $self   = shift;
-    my $dbname = shift;
+	my $self   = shift;
+	my $dbname = shift;
 
-    $self->_dbh->do("use $dbname");
-    $self->_schema($dbname);
-    $self->clear_cache;
+	$self->_dbh->do("use $dbname");
+	$self->_schema($dbname);
+	$self->clear_cache;
 
-    return 1;
+	return 1;
 }
 
 =back
@@ -1590,12 +1610,12 @@ information.
 =cut
 
 sub clear_cache {
-    my $self = shift;
+	my $self = shift;
 
-    $self->_index_cache(      {} );
-    $self->_constraint_cache( {} );
-    $self->_depth_cache(      {} );
-    $self->_describe_cache(   {} );
+	$self->_index_cache(      {} );
+	$self->_constraint_cache( {} );
+	$self->_depth_cache(      {} );
+	$self->_describe_cache(   {} );
 }
 
 =item clone_dbh()
@@ -1608,14 +1628,14 @@ returned dbh will also be in that same context.
 =cut
 
 sub clone_dbh {
-    my $self = shift;
+	my $self = shift;
 
-    my $dbh = $self->_dbh->clone( { AutoCommit => 0 } )
-        ;    # workaround dbd:mysql bug
-    $dbh->{AutoCommit} = 1;    # workaround dbd:mysql bug
-    $dbh->do( "use " . $self->_schema );
+	my $dbh
+		= $self->_dbh->clone( { AutoCommit => 0 } );  # workaround dbd:mysql bug
+	$dbh->{AutoCommit} = 1;                           # workaround dbd:mysql bug
+	$dbh->do( "use " . $self->_schema );
 
-    return $dbh;
+	return $dbh;
 }
 
 =back
@@ -1623,23 +1643,6 @@ sub clone_dbh {
 =head1 SEE ALSO
 
 MySQL::Util::Data::Create
-
-=head1 DEPRECATED
-
-get_ak_constraints($table) - superceded by get_ak_constraint()
-
-=cut
-
-sub get_ak_constraints {
-    my $self = shift;
-
-    my $pkg = __PACKAGE__;
-    print STDERR
-        "WARNING: $pkg\::get_ak_constraints() has been deprecated. use "
-        . "$pkg\::get_ak_constraint() instead.\n";
-
-    return $self->get_ak_constraint(@_);
-}
 
 =head1 AUTHOR
 
