@@ -25,6 +25,7 @@ WriteMakefile(
         'SQL::Beautify'        => 0,
         'Smart::Args'          => 0,
         'Symbol::Util'         => 0,
+        'Config::General' 	   => 0,
     },
     EXE_FILES => [ "bin/myutil_create_data.pl",
 				   "bin/myutil_dump_table_constraints.pl",

@@ -9,7 +9,6 @@ use feature 'state';
 use List::MoreUtils 'uniq';
 use Carp 'croak';
 use Config::General;
-use Text::Lorem::More;
 
 =head1 NAME
 
@@ -193,7 +192,7 @@ sub _apply_defaults {
 
 		# optional
 		my $defaults => { isa => 'HashRef', default => {}, optional => 1 },
-		my $conf     => 'Str';
+		my $conf     => { isa => 'Str|Undef', optional => 1 };
 
 	my $defaults_href;
 
@@ -228,15 +227,6 @@ sub _apply_defaults {
 	return $defaults_href;
 }
 
-sub firstname {
-	args_pos
-		my $self => 'Object';	
-		
-	my $lorem = Text::Lorem::More->new;
-	
-	return $lorem->generate("+firstname");
-}
-
 sub create_data {
 	args
 
@@ -247,7 +237,7 @@ sub create_data {
 
 		# optional
 		my $defaults => { isa => 'HashRef', default => {}, optional => 1 },
-		my $conf     => 'Str';
+		my $conf     => { isa => 'Str', optional => 1};
 
 	my $defaults_href = $self->_apply_defaults(
 		table    => $table,
@@ -274,7 +264,7 @@ sub create_data {
 	for ( my $i = 0; $i < $rows; $i++ ) {
 		my %col_data = %$defaults_href;
 		$self->_verbose( "default data\n" . Dumper( \%col_data ) );
-$col_data{tester} = $self->firstname;
+
 		$self->_get_pk_data( table => $table, col_data_href => \%col_data );
 		$self->_verbose( "after pk data\n" . Dumper( \%col_data ) );
 
