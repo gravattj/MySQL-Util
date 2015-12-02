@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
-use Module::Build::Prereq;
+#use Module::Build::Prereq;
 
 my $prereq_pm = {
     'DBI'                  => 0,
@@ -22,12 +22,11 @@ my $prereq_pm = {
     'Config::General'      => 0,
 };
 
-assert_modules(
-    prereq_pm      => $prereq_pm,
-    ignore_modules => qr/^MySQL::Util.*/,
-);
+#assert_modules(
+#    prereq_pm      => $prereq_pm,
+#    ignore_modules => qr/^MySQL::Util.*/,
+#);
 
-## Please see file perltidy.ERR
 WriteMakefile(
     NAME          => 'MySQL::Util',
     AUTHOR        => q{John Gravatt <gravattj@cpan.org>},
