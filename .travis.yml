@@ -18,8 +18,8 @@ before_install:
 install:
   - export RELEASE_TESTING=1 AUTOMATED_TESTING=1 AUTHOR_TESTING=1 HARNESS_OPTIONS=c HARNESS_TIMER=1
   - cpanm --notest Devel::Cover::Report::Coveralls
-  - cpanm --notest --showdeps .
-  - cpanm --notest --installdeps .
+  - cpanm -v --notest --showdeps .
+  - cpanm -v --notest --installdeps .
 
 script:
   - PERL5OPT=-MDevel::Cover=-coverage,statement,branch,condition,path,subroutine,-ignore,t/.*,prove prove -lrsv t
