@@ -36,9 +36,10 @@ WriteMakefile(
     ( $ExtUtils::MakeMaker::VERSION >= 6.3002
         ? ( 'LICENSE' => 'perl' )
         : () ),
-    PL_FILES  => {},
-    PREREQ_PM => $prereq_pm,
-    EXE_FILES => [
+    BUILD_REQUIRES => { 'Test::More' => 0, 'Module::Build::Prereq' => 0 },
+    PL_FILES       => {},
+    PREREQ_PM      => $prereq_pm,
+    EXE_FILES      => [
         "bin/myutil_create_data.pl",
         "bin/myutil_dump_table_constraints.pl",
         "bin/myutil_dump_table_fks.pl",

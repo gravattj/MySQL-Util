@@ -1,3 +1,3 @@
 DBI_USER=root
-DBI_PASS=''
+DBI_PASS=vagrant
 DBI_DSN=dbi:mysql:host=localhost;database=testmysqlutil
