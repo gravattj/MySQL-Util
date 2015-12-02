@@ -1339,7 +1339,7 @@ sub get_tables {
 	my $dbh = $self->_dbh;
 
 	my $tables = undef;
-	my $sth    = $dbh->prepare("show tables");
+	my $sth    = $dbh->prepare("show full tables where Table_Type = 'BASE TABLE'");
 	$sth->execute;
 
 	while ( my ($table) = $sth->fetchrow_array ) {
