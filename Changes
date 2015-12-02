@@ -1,5 +1,9 @@
 Revision history for MySQL-Util
 
+0.26    Minor update:
+            updated get_tables() to exclude views
+            converted Makefile.PL to use Module::Build::Prereq
+
 0.25    Major update:
             added MySQL::Util::Data::Create
             moved MySQL::Util::Cache to MySQL::Util::Data::Cache

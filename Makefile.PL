@@ -39,6 +39,8 @@ WriteMakefile(
     BUILD_REQUIRES => { 'Test::More' => 0, 'Module::Build::Prereq' => 0 },
     PL_FILES       => {},
     PREREQ_PM      => $prereq_pm,
+    NO_META        => 1,
+    NO_MYMETA      => 1,
     EXE_FILES      => [
         "bin/myutil_create_data.pl",
         "bin/myutil_dump_table_constraints.pl",
