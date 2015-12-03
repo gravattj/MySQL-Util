@@ -3,6 +3,7 @@ bin/myutil_create_data.pl
 bin/myutil_dump_table_constraints.pl
 bin/myutil_dump_table_fks.pl
 bin/myutil_dump_tables.pl
+build.sh
 Changes
 CONF
 eg/myutil_drop_test_db.pl
