@@ -12,6 +12,7 @@ lib/MySQL/Util/Data/Cache.pm
 lib/MySQL/Util/Data/Create.pm
 Makefile.PL
 MANIFEST			This list of files
+MySQL-Util-0.28.tar.gz
 README
 t/00-load_util.t
 t/15-cache.t

@@ -20,6 +20,7 @@ my $prereq_pm = {
     'Smart::Args'          => 0,
     'Symbol::Util'         => 0,
     'Config::General'      => 0,
+    'Module::Load'         => 0,
 };
 
 #assert_modules(

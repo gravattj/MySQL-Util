@@ -1,5 +1,7 @@
 Revision history for MySQL-Util
 
+0.28    added Module::Load to the prereqs because DBIx::Inspector needs it
+
 0.27    updated get_tables() to exclude views
         converted Makefile.PL to use Module::Build::Prereq
 
