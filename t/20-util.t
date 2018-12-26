@@ -555,4 +555,10 @@ sub constructor {
 		span => 0
 	);
 	ok( $Util, "$func - with valid args " );
+
+	my $dbh = $Util->clone_dbh;
+	$Util = MySQL::Util->new(
+		dbh => $dbh,
+	);
+	ok( $Util, "$func - with dbh" );	
 }

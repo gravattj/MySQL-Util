@@ -1,5 +1,5 @@
-rm -rf *.gz 
-rm -rf MANIFEST* 
+rm -f *.gz 
+rm -f MANIFEST MANIFEST.old
 
 perl Makefile.PL && \
 make && \

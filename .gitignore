@@ -4,3 +4,5 @@ MYMETA.*
 MANIFEST.bak
 Makefile*
 *.gz
+.project
+MANIFEST
