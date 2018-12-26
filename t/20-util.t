@@ -3,8 +3,9 @@
 use Modern::Perl;
 use String::Util ':all';
 use Data::Dumper;
-use Test::More qw/no_plan/;
+use Test::More;
 use feature 'state';
+use File::Which;
 
 use lib '.', './t';
 
@@ -16,8 +17,11 @@ use vars qw($Util);
 
 ########################
 
-load_db();
+if (!which('mysql')) {
+	plan skip_all => 'mysql not found';
+}
 
+load_db();
 constructor();
 verify_auto_commit();
 clone_dbh();
@@ -40,6 +44,7 @@ get_other_constraints();
 get_other_indexes();
 get_pk_index();
 is_column_nullable();
+done_testing();
 
 ##################################
 
