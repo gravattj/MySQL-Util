@@ -6,12 +6,10 @@ use Data::Dumper;
 use Test::More;
 use feature 'state';
 use File::Which;
+use MySQL::Util;
 
 use lib '.', './t';
-
 require 'testlib.pl';
-
-BEGIN { use_ok('MySQL::Util'); }
 
 use vars qw($Util);
 
@@ -48,9 +46,9 @@ else {
 	get_pk_index();
 	is_column_nullable();
 	drop_db();
+	done_testing();
 }
 
-done_testing();
 
 ##################################
 

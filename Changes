@@ -2,6 +2,7 @@ Revision history for MySQL-Util
 
 0.32    - fixed unit tests so they are skipped when a mysql connection
           can't be established
+        - first version of MySQL::Util::Lite
           
 0.31    - fixed 127712
 

@@ -6,3 +6,4 @@ Makefile*
 *.gz
 .project
 MANIFEST
+.includepath
