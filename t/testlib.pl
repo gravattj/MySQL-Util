@@ -67,7 +67,7 @@ sub get_mysql_cmdline {
 
 	my $cmd = 'mysql';
 	$cmd .= ' -u ' . $conf{DBI_USER};
-	$cmd .= ' -h ' . $conf{host};
+	$cmd .= ' -h ' . $conn{host};
 	$cmd .= ' -p' . $conf{DBI_PASS} if $conf{DBI_PASS};
 	$cmd .= ' -P ' . $conn{port} if $conn{port};
 	$cmd .= ' -D ' . $conn{dbname} if $with_dbname;
