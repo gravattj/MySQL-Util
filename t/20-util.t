@@ -22,6 +22,7 @@ elsif ( !check_connection() ) {
 	plan skip_all => 'unable to connect to mysql';
 }
 else {
+	drop_db();
 	load_db();
 	constructor();
 	verify_auto_commit();
