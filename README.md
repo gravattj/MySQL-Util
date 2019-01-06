@@ -1,5 +1,7 @@
 MySQL-Util
 
+[![Build Status](https://travis-ci.org/gravattj/MySQL-Util.svg?branch=master)](https://travis-ci.org/gravattj/MySQL-Util)
+
 DESCRIPTION
     Utility functions for working with MySQL.
 

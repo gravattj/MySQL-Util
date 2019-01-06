@@ -65,13 +65,12 @@ sub get_mysql_cmdline {
 	my %conf = parse_conf();
 	my %conn = parse_dsn();
 
-	my $cmd = sprintf "mysql -u %s -p%s -h %s ",
-	  $conf{DBI_USER},
-	  defined $conf{DBI_PASS} ? $conf{DBI_PASS} : '',
-	  $conn{host};
-	  
-	$cmd .= " -P $conn{port}"   if $conn{port};
-	$cmd .= " -D $conn{dbname}" if $with_dbname;
+	my $cmd = 'mysql';
+	$cmd .= ' -u ' . $conf{DBI_USER};
+	$cmd .= ' -h ' . $conf{host};
+	$cmd .= ' -p' . $conf{DBI_PASS} if $conf{DBI_PASS};
+	$cmd .= ' -P ' . $conn{port} if $conn{port};
+	$cmd .= ' -D ' . $conn{dbname} if $with_dbname;
 
 	return $cmd;
 }
