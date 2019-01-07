@@ -14,18 +14,6 @@ has name => (
 	required => 1,
 );
 
-has table_name => (
-	is => 'ro',
-	isa => 'Str',
-	required => 1,
-);
-
-has schema_name => (
-	is => 'ro',
-	isa => 'Str',
-	required => 1,
-);
-
 has key => (
 	is => 'ro',
 	isa => 'Str|Undef',

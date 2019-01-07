@@ -1,4 +1,4 @@
-package MySQL::Util::Lite::ForeignKeyColumn;
+package MySQL::Util::Lite::ColumnConstraint;
 
 our $VERSION = '0.01';
 
@@ -8,7 +8,7 @@ use namespace::autoclean;
 use Method::Signatures;
 use Data::Printer alias => 'pdump';
 
-has name => (
+has column_name => (
 	is       => 'ro',
 	isa      => 'Str',
 	required => 1,

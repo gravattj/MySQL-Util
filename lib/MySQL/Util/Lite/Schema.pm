@@ -15,6 +15,13 @@ has name => (
 	required => 1,
 );
 
+has tables => (
+	is => 'rw',
+	isa => 'ArrayRef[MySQL::Util::Lite::Table]',
+	lazy => 1,
+	builder => '_build_tables',
+);
+
 has _util => (
 	is       => 'ro',
 	isa      => 'MySQL::Util',
@@ -32,6 +39,11 @@ method get_table (Str $name) {
 }
 
 method get_tables {
+	
+	return @{ $self->tables };	
+}
+
+method _build_tables {
 
 	my $aref = $self->_util->get_tables;
 
@@ -40,12 +52,11 @@ method get_tables {
 		push @ret,
 		  MySQL::Util::Lite::Table->new(
 			name        => $table,
-			schema_name => $self->name,
 			_util       => $self->_util
 		  );
 	}
 
-	return @ret;
+	return \@ret;
 }
 
 1;

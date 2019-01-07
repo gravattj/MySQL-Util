@@ -45,9 +45,9 @@ sub get_schema {
 sub get_tables {
 	my $schema = shift;
 
-	my @tables = $schema->get_tables;
-	ok(@tables);
-	foreach my $t (@tables) {
+	my $tables = $schema->tables;
+	ok(@$tables);
+	foreach my $t (@$tables) {
 		ok( ref($t) eq 'MySQL::Util::Lite::Table' );
 		get_foreign_keys($t);
 		get_parent_tables($t);
@@ -58,11 +58,11 @@ sub get_tables {
 sub get_columns {
 	my $t = shift;
 
-	my @cols;
-	eval {	@cols = $t->get_columns;	};
+	my $cols;
+	eval {	$cols = $t->columns; };
 	ok(!$@);
 	
-	foreach my $c (@cols) {
+	foreach my $c (@$cols) {
 		ok(ref($c) eq 'MySQL::Util::Lite::Column');	
 	}
 }
@@ -72,7 +72,7 @@ sub get_parent_tables {
 
 	my @tables;
 	eval {	@tables = $t->get_parent_tables;};
-	ok(!$@);
+	ok(!$@) or pdump $@;
 	
 	foreach my $table (@tables) {
 		ok(ref($table) eq 'MySQL::Util::Lite::Table');		
@@ -84,8 +84,8 @@ sub get_foreign_keys {
 
 	my @fks = $t->get_foreign_keys;
 	foreach my $fk (@fks) {
-		eval { my @cols = $fk->get_columns; };
-		ok(!$@);
+		eval { my @cols = $fk->column_constraints; };
+		ok(!$@) or pdump $@;;
 	}
 }
 

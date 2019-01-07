@@ -7,3 +7,4 @@ Makefile*
 .project
 MANIFEST
 .includepath
+cover_db/

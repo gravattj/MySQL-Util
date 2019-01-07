@@ -4,6 +4,7 @@ MySQL-Util
 [![Coverage Status](https://coveralls.io/repos/github/gravattj/MySQL-Util/badge.svg)](https://coveralls.io/github/gravattj/MySQL-Util)
 
 DESCRIPTION
+
     Utility functions for working with MySQL.
 
 REQUIRES
