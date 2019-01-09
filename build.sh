@@ -1,3 +1,9 @@
+#!/bin/bash
+
+if [[ -f Makefile ]]; then
+	make clean
+fi
+
 rm -f *.gz 
 rm -f MANIFEST MANIFEST.old
 
